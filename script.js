@@ -7,33 +7,41 @@
 const startButton = document.getElementById('start-btn');
 const reset_lap_Button = document.getElementById('reset-btn');
 
-// stop watch displays
-const minutes = document.querySelector('.minutes');
-const seconds = document.querySelector('.seconds');
-const centiSeconds = document.querySelector('.centiseconds');
+const timerDisplay = document.querySelector('.timer');
 
 // lap container is where lap counts are recorded
 const lapContainer = document.querySelector('.lap-container');
 
 
-let centisecs = 0, secs = 0, mins = 0;
-let clickCount = 0, timerRunning = false;
+let startTime, currentTime, elapsedTime;
 
 let currentLap; // stores amount of time elapsed after latest pressing of 'lap' button
+
+let clickCount = 0;  // Marks the number of times the start button has been clicked 
+
+let timerRunning = false;
 
 
 // start stop watch
 startButton.addEventListener('click', event => {
 
-    clickCount = clickCount + 1;
+    clickCount = clickCount + 1;    
 
-    if(clickCount === 1) {
+    startTime = Date.now();
+
+
+
+    if(clickCount === 1) {  //If click count = 1, means that the Start button has been clicked once and watch is running
         const counter = setInterval(() => {
+            currentTime = Date.now();
 
-            if(timerRunning === true && clickCount > 1) {
+            elapsedTime = currentTime - startTime;
+
+            if(timerRunning === true && clickCount > 1) {   //means watch is running 
                 // will work only if timer is already running, resets timer 
                 timerRunning = false;
                 clickCount = 0;
+                startTime = 0;
                 startButton.innerText = 'Start';
                 reset_lap_Button.innerText = 'Reset'
                 btnStyleReset('Start', 'red', 'Reset', '#bd8787', '#fff')
@@ -41,60 +49,35 @@ startButton.addEventListener('click', event => {
             };
             
             timerRunning = true;
-            centisecs = centisecs + 1;
             
-            padWithZeros(minutes, seconds, centiSeconds, mins, secs, centisecs);
-    
+            timerDisplay.innerText = watchDisplay(elapsedTime);
             btnStyleReset('Stop', 'red', 'Lap', '#bd8787', '#fff')
 
-            if(centisecs === 100) {
-                centisecs = 0;
-                secs = secs + 1;
-            }
-    
-            if(secs === 60) {
-                secs = 0;
-                mins = mins + 1;
-            }
+            
         }, 10);
     }
 
 });
 
 
+// Reset button marks laps while the watch is running, and clears the display when it has stopped
 reset_lap_Button.addEventListener('click', event => {
 
     if(timerRunning === true) {
-        currentLap = `${new String(mins).padStart(2, '0')}: \
-                                ${new String(secs).padStart(2, '0')}.${new String(centisecs).padStart(2, '0') + ':'}`;
+        currentLap = watchDisplay(elapsedTime);
         
         const div = document.createElement('div');
         div.innerText = "+"+currentLap
         lapContainer.append(div);
     } 
     else {
-        minutes.innerText = 0;
-        seconds.innerText = 0;
-        centiSeconds.innerText = 0;
-        padWithZeros(minutes, seconds, centiSeconds, 0, 0, 0);
+        timerDisplay.innerText = '00:00.00'
         reset_lap_Button.innerText = 'Lap';
 
         const lapDivs = lapContainer.querySelectorAll('div');
         lapDivs.forEach(div => div.remove())
     }
 });
-
-
-
-// Pad numbers displayed with a leading zero 
-function padWithZeros(minutes, seconds, centiseconds, mins, secs, centisecs) {
-    // The first 3 arguments are HTML elements taking the values, 
-    // next 3 are values to be padded
-    centiseconds.innerText = new String(centisecs).padStart(2, '0');
-    seconds.innerText = new String(secs).padStart(2, '0') + '.';
-    minutes.innerText = new String(mins).padStart(2, '0') + ':';
-}
-
 
 
 // Change button colors and text with changing functionalities
@@ -104,6 +87,14 @@ function btnStyleReset(startText, startBackground, resetText, resetBackground, r
     reset_lap_Button.style.backgroundColor = resetBackground;
     reset_lap_Button.style.color = resetColor;
     reset_lap_Button.innerText = resetText;
+}
+
+
+// function to create a display for elapsed time (that is used in a stopwatch)
+function watchDisplay(elapsedTime) {
+    return `${String(new Date(elapsedTime).getMinutes()).padStart(2, '0')}:\
+                ${String(new Date(elapsedTime).getSeconds()).padStart(2, '0')}.\
+                ${String(Math.floor(new Date(elapsedTime).getMilliseconds()/10)).padStart(2, '0')}`;
 }
 
 
